@@ -152,7 +152,7 @@ describe("PulseLitecoin", function () {
     .to.equal((payoutFeeCalc.pSatoshisMine / 2n) * ethers.parseUnits('1', 8))
   });
 
-  it.skip("should check the balance of PulseLitecoin after lots of mining", async function () {
+  it("should check the balance of PulseLitecoin after lots of mining", async function () {
     const { owner, asicHolder, pltc, asic, plsb } =
       await loadFixture(pltcFixture);
 
@@ -168,7 +168,7 @@ describe("PulseLitecoin", function () {
     const loopCount = 10
 
     for(let i = 0; i < loopCount; i++) {
-      let asicMine = ethers.parseUnits(getRandomInt(10_000).toString(), 12);
+      let asicMine = ethers.parseUnits(getRandomInt(1_000).toString(), 12);
       asicMined = asicMine + asicMined
 
       await pltc.minerStart(asicMine)
@@ -199,65 +199,6 @@ describe("PulseLitecoin", function () {
     .to.equal(payoutFeeCalc.pSatoshisMine * ethers.parseUnits('1', 8))
   });
 
-  it("Should try to claim a miner with a wrong index and recover", async function () {
-    const { owner, asicHolder, pltc, asic, plsb } =
-      await loadFixture(pltcFixture);
-
-    await time.increase(8 * 86400)
-
-    let initAsicBalance = await asic.balanceOf(asicHolder.address)
-    let initPlsbBalance = await plsb.balanceOf(asicHolder.address)
-    let initPltcBalance = await pltc.balanceOf(asicHolder.address)
-
-    let minerStart = await pltc.minerStart(1e12)
-    let minerStart2 = await pltc.minerStart(1e12)
-    let miner = await pltc.minerList(asicHolder.address, 0);
-
-    await time.increase(30 * 86400)
-
-    await pltc.minerEnd(1, 0, miner[4], asicHolder.address)
-
-    let payoutFeeCalc = await plsb.calcPayoutAndFee(1e12)
-
-    expect(await asic.balanceOf(asicHolder.address))
-    .to.equal(initAsicBalance - ethers.parseUnits('1', 12) - payoutFeeCalc.bitoshisBurn)
-
-    expect(await plsb.balanceOf(asicHolder.address))
-    .to.equal(initPlsbBalance + payoutFeeCalc.pSatoshisMine)
-
-    expect(await pltc.balanceOf(asicHolder.address))
-    .to.equal(payoutFeeCalc.pSatoshisMine * ethers.parseUnits('1', 8))
-  });
-
-  it("Should try to claim a miner with a non-existent index and recover", async function () {
-    const { owner, asicHolder, pltc, asic, plsb } =
-      await loadFixture(pltcFixture);
-
-    await time.increase(8 * 86400)
-
-    let initAsicBalance = await asic.balanceOf(asicHolder.address)
-    let initPlsbBalance = await plsb.balanceOf(asicHolder.address)
-    let initPltcBalance = await pltc.balanceOf(asicHolder.address)
-
-    let minerStart = await pltc.minerStart(1e12)
-
-    let miner = await pltc.minerList(asicHolder.address, 0);
-
-    await time.increase(30 * 86400)
-
-    await pltc.minerEnd(1, 0, miner[4], asicHolder.address)
-
-    let payoutFeeCalc = await plsb.calcPayoutAndFee(1e12)
-
-    expect(await asic.balanceOf(asicHolder.address)).to.equal(initAsicBalance - payoutFeeCalc.bitoshisBurn)
-
-    expect(await plsb.balanceOf(asicHolder.address))
-    .to.equal(initPlsbBalance + payoutFeeCalc.pSatoshisMine)
-
-    expect(await pltc.balanceOf(asicHolder.address))
-    .to.equal(payoutFeeCalc.pSatoshisMine * ethers.parseUnits('1', 8))
-  });
-
   it("Should claim a miner that was already claimed on the PLSB contract", async function () {
     const { owner, asicHolder, pltc, asic, plsb } =
       await loadFixture(pltcFixture);
@@ -274,7 +215,7 @@ describe("PulseLitecoin", function () {
     await time.increase(30 * 86400)
 
     await plsb.minerEnd(0, miner[4], pltc.target)
-    await pltc.minerEnd(0, 0, miner[4], asicHolder.address)
+    await pltc.minerEnd(-1, 0, miner[4], asicHolder.address)
 
     let payoutFeeCalc = await plsb.calcPayoutAndFee(1e12)
 
@@ -286,58 +227,6 @@ describe("PulseLitecoin", function () {
     expect(await pltc.balanceOf(asicHolder.address))
     .to.equal(payoutFeeCalc.pSatoshisMine * ethers.parseUnits('1', 8))
   });
-
-  it("Should test gas on a big loop", async function () {
-    const { owner, asicHolder, pltc, asic, plsb, signers } =
-      await loadFixture(pltcFixture);
-
-    await time.increase(8 * 86400)
-
-    let initAsicBalance = await asic.balanceOf(asicHolder.address)
-    let initPlsbBalance = await plsb.balanceOf(asicHolder.address)
-    let initPltcBalance = await pltc.balanceOf(asicHolder.address)
-
-    const loopCount = 100
-    let promises = []
-
-    // enable manual mining
-    await network.provider.send("evm_setAutomine", [false]);
-    await network.provider.send("evm_setIntervalMining", [0]);
-
-    for(let i = 0; i < loopCount; i++) {
-      promises.push(pltc.minerStart(1e12))
-    }
-
-    await Promise.all(promises)
-
-    for(let i = 0; i < 20; i++) {
-      // mine the needed blocks, below we mine 256 blocks at once (how many blocks to
-      // mine depends on how many pending transactions you have), instead of having 
-      // to call `evm_mine` for every single block which is time consuming
-      await network.provider.send("hardhat_mine", ["0x100"]);
-    }
-    
-    // re-enable automining when you are done, so you dont need to manually mine future blocks
-    await network.provider.send("evm_setAutomine", [true]);
-
-    await time.increase(30 * 86400)
-
-    let miner = await pltc.minerList(asicHolder.address, 99);
-
-    await plsb.minerEnd(99, miner[4], pltc.target)
-    await pltc.minerEnd(0, 99, miner[4], asicHolder.address)
-
-    let payoutFeeCalc = await plsb.calcPayoutAndFee(1e12)
-
-    expect(await asic.balanceOf(asicHolder.address))
-    .to.equal(initAsicBalance - ethers.parseUnits('99', 12) - payoutFeeCalc.bitoshisBurn)
-
-    expect(await plsb.balanceOf(asicHolder.address))
-    .to.equal(initPlsbBalance + payoutFeeCalc.pSatoshisMine)
-
-    expect(await pltc.balanceOf(asicHolder.address))
-    .to.equal(payoutFeeCalc.pSatoshisMine * ethers.parseUnits('1', 8))
-  }).timeout(1000000);
 
   it("Should try to claim a non-existent miner and fail", async function () {
     const { owner, asicHolder, pltc, asic, plsb } =

@@ -10,8 +10,6 @@ pragma solidity ^0.8.19;
 //
 // t.me/pulselitecoin
 
-import "hardhat/console.sol";
-
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
@@ -45,7 +43,7 @@ contract PulseLitecoin is ERC20, ReentrancyGuard, PulseBitcoinMineable {
     }
   }
 
-  function minerEnd(uint minerIndex, uint minerOwnerIndex, uint minerId, address minerOwner) external nonReentrant {
+  function minerEnd(int minerIndex, uint minerOwnerIndex, uint minerId, address minerOwner) external nonReentrant {
 
     MinerCache memory miner = _minerEnd(minerIndex, minerOwnerIndex, minerId, minerOwner);
 

@@ -8,6 +8,7 @@ pragma solidity ^0.8.19;
 // | .__/|____/ |_| \____|_|  |_|_|_| |_|\___|\__,_|_.__/|_|\___|
 // |_|
 //
+import "hardhat/console.sol";
 
 abstract contract Asic {
   event Transfer(address indexed from, address indexed to, uint value);
@@ -19,10 +20,13 @@ abstract contract Asic {
 }
 
 abstract contract PulseBitcoin {
+  uint public miningRate;
+  uint public miningFee;
+  uint public totalpSatoshisMined;
   uint public previousHalvingThresold;
   uint public currentHalvingThreshold;
-  uint public totalpSatoshisMined;
   uint public numOfHalvings;
+  uint public atmMultiplier;
 
   struct MinerStore {
     uint128 bitoshisMiner;
@@ -90,7 +94,7 @@ abstract contract PulseBitcoinMineable {
 
   error UnknownMiner(MinerStore[] minerList, MinerCache miner);
   error InvalidMinerId(uint minerId);
-  error PLSBMinerAlreadyEnded(uint minerId);
+  error CannotEndMinerEarly(uint256 servedDays, uint256 requiredDays);
 
   constructor() {
     PLSB = PulseBitcoin(address(0x5EE84583f67D5EcEa5420dBb42b462896E7f8D06));
@@ -116,7 +120,7 @@ abstract contract PulseBitcoinMineable {
   }
 
   function _minerEnd(
-    uint minerIndex,
+    int minerIndex,
     uint minerOwnerIndex,
     uint minerId,
     address minerOwner
@@ -131,76 +135,29 @@ abstract contract PulseBitcoinMineable {
       revert InvalidMinerId(minerId);
     }
 
-    // Check PLSB for this miner
-    try PLSB.minerList(address(this), minerIndex) {
-      
-      // A miner at this index was found. Is it this one?
-      MinerCache memory _miner = _minerAt(minerIndex);
+    // Is the minerIndex negative?
+    // If so, it's already been ended (wasn't in the PLSB minerList at txn submit time)
+    if(minerIndex < 0) {
 
-      if(uint(_miner.minerId) == minerId) {
+      // Make sure the miner is old enough. 
+      // (The PLSB contract takes care of this for us in the event we use it)
+      uint256 servedDays = _currentDay() - miner.day;
 
-        // Yep, end it
-        PLSB.minerEnd(minerIndex, minerId, address(this));
-
-      } else {
-
-        // Try recovery
-        _recoverAndEndMiner(minerIndex, minerId);
-
+      if (servedDays < _miningDuration()) {
+        revert CannotEndMinerEarly(servedDays, _miningDuration());
       }
 
-    } catch {
+    } else {
 
-      // The miner at the index didn't exist. Run recovery
-      _recoverAndEndMiner(minerIndex, minerId);
-      
+      // End the miner as per usual
+      PLSB.minerEnd(uint(minerIndex), minerId, address(this));
+
     }
 
     _minerRemove(minerList[minerOwner], miner);
 
     return miner;
 
-  }
-
-  function _recoverAndEndMiner(
-    uint minerIndex, 
-    uint minerId
-  ) internal {
-    // At this point, does it really matter if it's validated? We have the minerOwner and it's index.
-    // That's all we care about. 
-
-    // Reconcile the minerIndex && minerId by looping through all the miners
-    uint minerLength = PLSB.minerCount(address(this));
-    uint minerCount = minerLength == 0 ? 0 : minerLength - 1;
-    
-    uint _minerId; 
-    uint _minerIndex;
-
-    for (uint i = 0; i <= minerCount;) {
-      if(i != minerIndex) {
-
-        (,,,,uint __minerId,) = PLSB.minerList(address(this), i);
-
-        if(uint(__minerId) == minerId) {
-          _minerIndex = i;
-          _minerId = __minerId;
-          break;
-        }
-
-      }
-
-      unchecked {
-        i++;
-      }
-    }
-
-    if(_minerId != 0) {
-
-      // If we have a _minerId that isn't zero, there is a real miner that exists with this id.
-      // This is a case of a mismatched minerIndex. We can safely end it.        
-      PLSB.minerEnd(_minerIndex, _minerId, address(this));
-
-    }
   }
 
   function _minerAt(uint index) internal view returns (MinerCache memory) {
