@@ -72,10 +72,19 @@ describe("PulseLitecoin", function () {
     await time.increase(7 * 86400)
 
     await pltc.minerStart(asicToMine)
+    let miner = await pltc.minerList(asicHolder.address, 0)
 
     let payoutFeeCalc = await plsb.calcPayoutAndFee(asicToMine)
 
     expect(await asic.balanceOf(asicHolder.address)).to.equal(initAsicBalance - asicToMine)
+    expect(await pltc.balanceOf(asicHolder.address))
+    .to.equal(payoutFeeCalc.pSatoshisMine * ethers.parseUnits('1', 8))
+
+    await time.increase(30 * 86400)
+
+    await pltc.minerEnd(0, 0, miner[4], asicHolder.address)
+
+    expect(await asic.balanceOf(asicHolder.address)).to.equal(initAsicBalance - payoutFeeCalc.bitoshisBurn)
     expect(await pltc.balanceOf(asicHolder.address))
     .to.equal(payoutFeeCalc.pSatoshisMine * ethers.parseUnits('1', 8))
   });
