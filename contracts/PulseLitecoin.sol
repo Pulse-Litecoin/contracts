@@ -40,6 +40,11 @@ contract PulseLitecoin is ERC20, ReentrancyGuard, PulseBitcoinMineable {
     }
   }
 
+  // @dev End your miner
+  // @param minerIndex The index of the miner on the pLTC contract
+  // @param mienrOwnerIndex The index of the miner on the minerOwner
+  // @param minerId The minerId for the miner to end. Duh.
+  // @param minerOwner The owner of the miner to end. Also Duh.
   function minerEnd(int minerIndex, uint minerOwnerIndex, uint minerId, address minerOwner) external nonReentrant {
 
     MinerCache memory miner = _minerEnd(minerIndex, minerOwnerIndex, minerId, minerOwner);
