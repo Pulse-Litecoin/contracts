@@ -8,7 +8,6 @@ pragma solidity ^0.8.19;
 // | .__/|____/ |_| \____|_|  |_|_|_| |_|\___|\__,_|_.__/|_|\___|
 // |_|
 //
-import "hardhat/console.sol";
 
 abstract contract Asic {
   event Transfer(address indexed from, address indexed to, uint value);
