@@ -61,13 +61,6 @@ describe("PulseLitecoin", function () {
     };
   }
 
-  it("Should mint init supply to deployer", async function () {
-    const { pltc, owner } =
-      await loadFixture(pltcFixture);
-
-    expect(await pltc.balanceOf(owner.address)).to.equal(3694200000000000000000000n)
-  });
-
   it("Should mine PulseLitecoin with Asic & get PulseLitecoin immediatly", async function () {
     const { asicHolder, pltc, asic, plsb } =
       await loadFixture(pltcFixture);

@@ -17,7 +17,7 @@ import "./lib/PulseBitcoinMineable.sol";
 
 contract PulseLitecoin is ERC20, ReentrancyGuard, PulseBitcoinMineable {
   address private constant DEAD_ADDRESS = address(0x0000000000000000000000000000000000000000);
-  address private immutable DEPLOYER;
+
   uint private constant SCALE_FACTOR = 1e8;
   uint private constant MINING_ADVANCE_PERIOD = 7;
   uint public immutable START_DAY;
@@ -26,9 +26,6 @@ contract PulseLitecoin is ERC20, ReentrancyGuard, PulseBitcoinMineable {
 
   constructor() ERC20("PulseLitecoin", "pLTC") {
     START_DAY = _currentDay();
-    DEPLOYER = msg.sender;
-
-    _mint(DEPLOYER, 3694200 * 10 ** decimals());
   }
 
   function minerStart(uint bitoshis) external nonReentrant {
