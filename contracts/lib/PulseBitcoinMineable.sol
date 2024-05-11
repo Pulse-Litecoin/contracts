@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
+import 'hardhat/console.sol';
+
 //        ____ _____ ____ __  __ _                  _     _
 //  _ __ | __ )_   _/ ___|  \/  (_)_ __   ___  __ _| |__ | | ___
 // | '_ \|  _ \ | || |   | |\/| | | '_ \ / _ \/ _` | '_ \| |/ _ \
@@ -93,6 +95,7 @@ abstract contract PulseBitcoinMineable {
 
   error UnknownMiner(MinerStore[] minerList, MinerCache miner);
   error InvalidMinerId(uint minerId);
+  error InvalidMinerIndex(uint minerIndex);
   error CannotEndMinerEarly(uint256 servedDays, uint256 requiredDays);
 
   constructor() {
@@ -129,17 +132,21 @@ abstract contract PulseBitcoinMineable {
     
     MinerCache memory miner = _minerLoad(minerOwnerIndex, minerOwner);
 
-    // Check for this miner
+    // Do we have the correct miner?
     if(miner.minerId != minerId) {
       revert InvalidMinerId(minerId);
     }
 
-    // Is the minerIndex negative?
-    // If so, it's already been ended (wasn't in the pBTC minerList at txn submit time)
+    if(minerIndex < 0) {
+      // Try to find the miner index
+      minerIndex = _minerIndexSearch(miner);
+    }
+
+    // The miner index still wasn't found. Must've been ended already
     if(minerIndex < 0) {
 
       // Make sure the miner is old enough. 
-      // (The pBTC contract takes care of this for us in the event we use it)
+      // PLSB.minerEnd does this for us below.
       uint256 servedDays = _currentDay() - miner.day;
       if (servedDays < _miningDuration()) {
         revert CannotEndMinerEarly(servedDays, _miningDuration());
@@ -240,6 +247,31 @@ abstract contract PulseBitcoinMineable {
     if(minerListRef.length == minerListLength) {
       revert UnknownMiner(minerListRef, miner);
     }
+  }
+
+  // @dev Find the minerIndex of a miner. 
+  // This is heavy, only runs if we don't know the index
+  function _minerIndexSearch(
+    MinerCache memory miner
+  ) internal view returns (int) {
+    uint minerListLength = PLSB.minerCount(address(this));
+    int foundMinerIndex = -1;
+
+    for(uint i=0; i < minerListLength;) {
+      console.log("Had to loop", i);
+
+      if(_minerAt(i).minerId == miner.minerId) {
+        foundMinerIndex = int(i);
+
+        break;
+      }
+
+      unchecked {
+        i++;
+      }
+    }
+
+    return foundMinerIndex;
   }
 
   function _miningDuration() internal pure returns (uint) {

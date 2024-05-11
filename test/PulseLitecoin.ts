@@ -154,7 +154,7 @@ describe("PulseLitecoin", function () {
     .to.equal((payoutFeeCalc.pSatoshisMine / 2n) * ethers.parseUnits('1', 8))
   });
 
-  it("should check the balance of PulseLitecoin after lots of mining", async function () {
+  it("Should check the balance of PulseLitecoin after lots of mining", async function () {
     const { owner, asicHolder, pltc, asic, plsb } =
       await loadFixture(pltcFixture);
 
@@ -230,22 +230,40 @@ describe("PulseLitecoin", function () {
     .to.equal(payoutFeeCalc.pSatoshisMine * ethers.parseUnits('1', 8))
   });
 
-  it("Should claim a real miner with unknown minerIndex and fail", async function () {
+  it.only("Should claim a miner with unknown minerIndex (large dataset)", async function () {
     const { owner, asicHolder, pltc, asic, plsb } =
       await loadFixture(pltcFixture);
 
     await time.increase(8 * 86400)
 
+    const loopCount = 100
+
+    for(let i = 0; i < loopCount; i++) {
+      let asicMine = ethers.parseUnits(getRandomInt(100).toString(), 12);
+
+      await pltc.minerStart(asicMine)
+    }
+
+    let initAsicBalance = await asic.balanceOf(asicHolder.address)
+    let initPlsbBalance = await plsb.balanceOf(asicHolder.address)
+    let initPltcBalance = await pltc.balanceOf(asicHolder.address)
+
     let minerStart = await pltc.minerStart(1e12)
-    let miner = await pltc.minerList(asicHolder.address, 0);
+    let miner = await pltc.minerList(asicHolder.address, loopCount);
 
     await time.increase(30 * 86400)
 
-    await pltc.minerEnd(-1, 0, miner[4], asicHolder.address)
+    await pltc.minerEnd(-1, loopCount, miner[4], asicHolder.address)
 
-    await expect(pltc.minerEnd(-1, 0, miner[4], asicHolder.address)).to.be.revertedWithCustomError(
-      pltc, 'InvalidMinerId'
-    ).withArgs(miner[4])
+    let payoutFeeCalc = await plsb.calcPayoutAndFee(1e12)
+
+    expect(await asic.balanceOf(asicHolder.address)).to.equal(initAsicBalance - payoutFeeCalc.bitoshisBurn)
+
+    expect(await plsb.balanceOf(asicHolder.address))
+    .to.equal(initPlsbBalance + payoutFeeCalc.pSatoshisMine)
+
+    expect(await pltc.balanceOf(asicHolder.address))
+    .to.equal(payoutFeeCalc.pSatoshisMine * ethers.parseUnits('1', 8))
   });
 
   it("Should try to claim a non-existent miner and fail", async function () {
