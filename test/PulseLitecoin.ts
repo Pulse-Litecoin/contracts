@@ -230,6 +230,24 @@ describe("PulseLitecoin", function () {
     .to.equal(payoutFeeCalc.pSatoshisMine * ethers.parseUnits('1', 8))
   });
 
+  it("Should claim a real miner with unknown minerIndex and fail", async function () {
+    const { owner, asicHolder, pltc, asic, plsb } =
+      await loadFixture(pltcFixture);
+
+    await time.increase(8 * 86400)
+
+    let minerStart = await pltc.minerStart(1e12)
+    let miner = await pltc.minerList(asicHolder.address, 0);
+
+    await time.increase(30 * 86400)
+
+    await pltc.minerEnd(-1, 0, miner[4], asicHolder.address)
+
+    await expect(pltc.minerEnd(-1, 0, miner[4], asicHolder.address)).to.be.revertedWithCustomError(
+      pltc, 'InvalidMinerId'
+    ).withArgs(miner[4])
+  });
+
   it("Should try to claim a non-existent miner and fail", async function () {
     const { owner, asicHolder, pltc, asic, plsb } =
       await loadFixture(pltcFixture);

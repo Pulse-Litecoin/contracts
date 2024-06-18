@@ -16,13 +16,11 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "./lib/PulseBitcoinMineable.sol";
 
 contract PulseLitecoin is ERC20, ReentrancyGuard, PulseBitcoinMineable {
-  address private constant DEAD_ADDRESS = address(0x0000000000000000000000000000000000000000);
-
   uint private constant SCALE_FACTOR = 1e8;
   uint private constant MINING_ADVANCE_PERIOD = 7;
   uint public immutable START_DAY;
 
-  mapping(address => bool) public preMiners;
+  mapping(uint => bool) public preMiners;
 
   constructor() ERC20("PulseLitecoin", "pLTC") {
     START_DAY = _currentDay();
@@ -36,7 +34,7 @@ contract PulseLitecoin is ERC20, ReentrancyGuard, PulseBitcoinMineable {
     // If this is the first week of mining, mint pLTC now
     if(_currentDay() - START_DAY <= MINING_ADVANCE_PERIOD) {
       _mint(msg.sender, miner.pSatoshisMined * SCALE_FACTOR);
-      preMiners[msg.sender] = true;
+      preMiners[miner.minerId] = true;
     }
   }
 
@@ -57,7 +55,7 @@ contract PulseLitecoin is ERC20, ReentrancyGuard, PulseBitcoinMineable {
     // Also, the miner loses half of the pLTC yield to the caller
     if (servedDays > _daysForPenalty()) {
 
-      if(!preMiners[minerOwner]) {
+      if(!preMiners[miner.minerId]) {
         _mint(minerOwner, cryptoCoinMined / 2);
         _mint(msg.sender, cryptoCoinMined / 2);
       }
@@ -67,12 +65,12 @@ contract PulseLitecoin is ERC20, ReentrancyGuard, PulseBitcoinMineable {
 
     } else {
 
-      if(!preMiners[minerOwner]) {
+      if(!preMiners[miner.minerId]) {
         _mint(minerOwner, cryptoCoinMined);
       }
 
       ASIC.transfer(minerOwner, miner.bitoshisReturned);
-      PLSB.transfer(minerOwner, miner.pSatoshisMined);
+      pBTC.transfer(minerOwner, miner.pSatoshisMined);
 
     }
   }

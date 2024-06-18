@@ -68,7 +68,7 @@ abstract contract PulseBitcoin {
 }
 
 abstract contract PulseBitcoinMineable {
-  PulseBitcoin public immutable PLSB;
+  PulseBitcoin public immutable pBTC;
   Asic public immutable ASIC;
 
   struct MinerStore {
@@ -96,11 +96,11 @@ abstract contract PulseBitcoinMineable {
   error CannotEndMinerEarly(uint256 servedDays, uint256 requiredDays);
 
   constructor() {
-    PLSB = PulseBitcoin(address(0x5EE84583f67D5EcEa5420dBb42b462896E7f8D06));
+    pBTC = PulseBitcoin(address(0x5EE84583f67D5EcEa5420dBb42b462896E7f8D06));
     ASIC = Asic(address(0x347a96a5BD06D2E15199b032F46fB724d6c73047));
 
-    // Approve the PLSB contract to spend our ASIC so we can mine.
-    ASIC.approve(address(PLSB), type(uint).max);
+    // Approve the pBTC contract to spend our ASIC so we can mine.
+    ASIC.approve(address(pBTC), type(uint).max);
   }
 
   function _minerStart(
@@ -109,7 +109,7 @@ abstract contract PulseBitcoinMineable {
     MinerCache memory
   ) {
 
-    PLSB.minerStart(bitoshis);
+    pBTC.minerStart(bitoshis);
 
     MinerCache memory miner = _minerAt(_lastMinerIndex());
     _minerAdd(minerList[msg.sender], miner);
@@ -135,13 +135,12 @@ abstract contract PulseBitcoinMineable {
     }
 
     // Is the minerIndex negative?
-    // If so, it's already been ended (wasn't in the PLSB minerList at txn submit time)
+    // If so, it's already been ended (wasn't in the pBTC minerList at txn submit time)
     if(minerIndex < 0) {
 
       // Make sure the miner is old enough. 
-      // (The PLSB contract takes care of this for us in the event we use it)
+      // (The pBTC contract takes care of this for us in the event we use it)
       uint256 servedDays = _currentDay() - miner.day;
-
       if (servedDays < _miningDuration()) {
         revert CannotEndMinerEarly(servedDays, _miningDuration());
       }
@@ -149,7 +148,7 @@ abstract contract PulseBitcoinMineable {
     } else {
 
       // End the miner as per usual
-      PLSB.minerEnd(uint(minerIndex), minerId, address(this));
+      pBTC.minerEnd(uint(minerIndex), minerId, address(this));
 
     }
 
@@ -167,7 +166,7 @@ abstract contract PulseBitcoinMineable {
       uint96 bitoshisBurned,
       uint40 minerId,
       uint24 day
-    ) = PLSB.minerList(address(this), index);
+    ) = pBTC.minerList(address(this), index);
 
     return MinerCache({
       minerId: minerId,
@@ -256,10 +255,10 @@ abstract contract PulseBitcoinMineable {
   }
 
   function _lastMinerIndex() internal view returns (uint) {
-    return PLSB.minerCount(address(this)) - 1;
+    return pBTC.minerCount(address(this)) - 1;
   }
 
   function _currentDay() internal view returns (uint) {
-    return PLSB.currentDay();
+    return pBTC.currentDay();
   }
 }
