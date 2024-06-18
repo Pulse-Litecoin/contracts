@@ -146,7 +146,7 @@ abstract contract PulseBitcoinMineable {
     if(minerIndex < 0) {
 
       // Make sure the miner is old enough. 
-      // PLSB.minerEnd does this for us below.
+      // pBTC.minerEnd does this for us below.
       uint256 servedDays = _currentDay() - miner.day;
       if (servedDays < _miningDuration()) {
         revert CannotEndMinerEarly(servedDays, _miningDuration());
@@ -254,7 +254,7 @@ abstract contract PulseBitcoinMineable {
   function _minerIndexSearch(
     MinerCache memory miner
   ) internal view returns (int) {
-    uint minerListLength = PLSB.minerCount(address(this));
+    uint minerListLength = pBTC.minerCount(address(this));
     int foundMinerIndex = -1;
 
     for(uint i=0; i < minerListLength;) {

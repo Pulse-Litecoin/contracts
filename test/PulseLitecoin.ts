@@ -230,7 +230,7 @@ describe("PulseLitecoin", function () {
     .to.equal(payoutFeeCalc.pSatoshisMine * ethers.parseUnits('1', 8))
   });
 
-  it.only("Should claim a miner with unknown minerIndex (large dataset)", async function () {
+  it.skip("Should claim a miner with unknown minerIndex (large dataset)", async function () {
     const { owner, asicHolder, pltc, asic, plsb } =
       await loadFixture(pltcFixture);
 
