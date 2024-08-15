@@ -16,7 +16,7 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "./lib/PulseBitcoinMineable.sol";
 
 contract PulseLitecoin is ERC20, ReentrancyGuard, PulseBitcoinMineable {
-  uint private constant SCALE_FACTOR = 1e8;
+  uint private constant SCALE_FACTOR = 1e3;
   uint private constant MINING_ADVANCE_PERIOD = 7;
   uint public immutable START_DAY;
 
@@ -26,6 +26,8 @@ contract PulseLitecoin is ERC20, ReentrancyGuard, PulseBitcoinMineable {
     START_DAY = _currentDay();
   }
 
+  // @dev Start your miner
+  // @param bitoshis The amount in ASIC to mine with
   function minerStart(uint bitoshis) external nonReentrant {
     ASIC.transferFrom(msg.sender, address(this), bitoshis);
 

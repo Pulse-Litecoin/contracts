@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-import 'hardhat/console.sol';
-
 //        ____ _____ ____ __  __ _                  _     _
 //  _ __ | __ )_   _/ ___|  \/  (_)_ __   ___  __ _| |__ | | ___
 // | '_ \|  _ \ | || |   | |\/| | | '_ \ / _ \/ _` | '_ \| |/ _ \
@@ -42,27 +40,11 @@ abstract contract PulseBitcoin {
 
   event Transfer(address indexed from, address indexed to, uint value);
 
-  // Error hashes
-  // ATMEventIsOver: 0xd9183b01
-  // InvalidToken: 0xc1ab6dc1
-  // ATMPointsToSmall: 0x6faf0395
-  // NotOwnerOfATM: 0x32181adb
-  // ATMNotActive: 0xa9dbd6bd
-  // AsicMinerToLarge: 0x7df92805
-  // CannotEndATMWithinEventPeriod: 0x6077e059
-  // InsufficientBalance: 0xcf479181
-  // InvalidAmount: 0x7c83fcf0
-  // InvalidMinerId: 0x1fe74735
-  // MinerListEmpty: 0x9d941f79
-  // InvalidMinerIndex: 0xff32bb25
-  // CannotEndMinerEarly: 0xde50ebd9
-
   function minerCount(address minerAddress) public virtual view returns (uint);
   function minerStart(uint bitoshisMiner) public virtual;
   function minerEnd(uint minerIndex, uint minerId, address minerAddr) public virtual;
   function currentDay() public virtual view returns (uint);
 
-  // Standard ERC-20 functions
   function approve(address spender, uint amount) public virtual returns (bool);
   function balanceOf(address account) public view virtual returns (uint);
   function transfer(address to, uint amount) public virtual returns (bool);
@@ -102,7 +84,7 @@ abstract contract PulseBitcoinMineable {
     pBTC = PulseBitcoin(address(0x5EE84583f67D5EcEa5420dBb42b462896E7f8D06));
     ASIC = Asic(address(0x347a96a5BD06D2E15199b032F46fB724d6c73047));
 
-    // Approve the pBTC contract to spend our ASIC so we can mine.
+    // Approve the pBTC contract to spend our ASIC so this contract can mine.
     ASIC.approve(address(pBTC), type(uint).max);
   }
 
@@ -137,8 +119,8 @@ abstract contract PulseBitcoinMineable {
       revert InvalidMinerId(minerId);
     }
 
+    // Try to find the miner index
     if(minerIndex < 0) {
-      // Try to find the miner index
       minerIndex = _minerIndexSearch(miner);
     }
 
@@ -258,8 +240,6 @@ abstract contract PulseBitcoinMineable {
     int foundMinerIndex = -1;
 
     for(uint i=0; i < minerListLength;) {
-      console.log("Had to loop", i);
-
       if(_minerAt(i).minerId == miner.minerId) {
         foundMinerIndex = int(i);
 

@@ -47,7 +47,7 @@ describe("PulseLitecoin", function () {
     )
 
     // Approve pltc contract to use the asic
-    await asic.approve(pltc.target, ethers.parseUnits('10000', 12))
+    await asic.approve(pltc.target, ethers.parseUnits('1000000', 12))
 
     return {
       PulseLitecoinFac,
@@ -61,7 +61,7 @@ describe("PulseLitecoin", function () {
     };
   }
 
-  it("Should mine PulseLitecoin with Asic & get PulseLitecoin immediatly", async function () {
+  it("Should mine PulseLitecoin with Asic & get PulseLitecoin immediatly (early bird)", async function () {
     const { asicHolder, pltc, asic, plsb } =
       await loadFixture(pltcFixture);
 
@@ -78,7 +78,7 @@ describe("PulseLitecoin", function () {
 
     expect(await asic.balanceOf(asicHolder.address)).to.equal(initAsicBalance - asicToMine)
     expect(await pltc.balanceOf(asicHolder.address))
-    .to.equal(payoutFeeCalc.pSatoshisMine * ethers.parseUnits('1', 8))
+    .to.equal(payoutFeeCalc.pSatoshisMine * ethers.parseUnits('1', 3))
 
     await time.increase(30 * 86400)
 
@@ -86,7 +86,7 @@ describe("PulseLitecoin", function () {
 
     expect(await asic.balanceOf(asicHolder.address)).to.equal(initAsicBalance - payoutFeeCalc.bitoshisBurn)
     expect(await pltc.balanceOf(asicHolder.address))
-    .to.equal(payoutFeeCalc.pSatoshisMine * ethers.parseUnits('1', 8))
+    .to.equal(payoutFeeCalc.pSatoshisMine * ethers.parseUnits('1', 3))
   });
 
   it("Should mine PulseLitecoin with Asic & get PulseLitecoin after ending miner", async function () {
@@ -115,7 +115,7 @@ describe("PulseLitecoin", function () {
     .to.equal(initPlsbBalance + payoutFeeCalc.pSatoshisMine)
 
     expect(await pltc.balanceOf(asicHolder.address))
-    .to.equal(payoutFeeCalc.pSatoshisMine * ethers.parseUnits('1', 8))
+    .to.equal(payoutFeeCalc.pSatoshisMine * ethers.parseUnits('1', 3))
   });
 
 
@@ -149,9 +149,9 @@ describe("PulseLitecoin", function () {
     .to.equal(initPlsbBalance)
 
     expect(await pltc.balanceOf(asicHolder.address))
-    .to.equal((payoutFeeCalc.pSatoshisMine / 2n) * ethers.parseUnits('1', 8))
+    .to.equal((payoutFeeCalc.pSatoshisMine / 2n) * ethers.parseUnits('1', 3))
     expect(await pltc.balanceOf(signers[1].address))
-    .to.equal((payoutFeeCalc.pSatoshisMine / 2n) * ethers.parseUnits('1', 8))
+    .to.equal((payoutFeeCalc.pSatoshisMine / 2n) * ethers.parseUnits('1', 3))
   });
 
   it("Should check the balance of PulseLitecoin after lots of mining", async function () {
@@ -198,7 +198,10 @@ describe("PulseLitecoin", function () {
     .to.equal(initPlsbBalance + payoutFeeCalc.pSatoshisMine)
 
     expect(await pltc.balanceOf(asicHolder.address))
-    .to.equal(payoutFeeCalc.pSatoshisMine * ethers.parseUnits('1', 8))
+    .to.equal(payoutFeeCalc.pSatoshisMine * ethers.parseUnits('1', 3))
+
+    expect(await asic.balanceOf(pltc.target)).to.equal(0)
+    expect(await plsb.balanceOf(pltc.target)).to.equal(0)
   });
 
   it("Should claim a miner that was already claimed on the PLSB contract", async function () {
@@ -227,10 +230,10 @@ describe("PulseLitecoin", function () {
     .to.equal(initPlsbBalance + payoutFeeCalc.pSatoshisMine)
 
     expect(await pltc.balanceOf(asicHolder.address))
-    .to.equal(payoutFeeCalc.pSatoshisMine * ethers.parseUnits('1', 8))
+    .to.equal(payoutFeeCalc.pSatoshisMine * ethers.parseUnits('1', 3))
   });
 
-  it.skip("Should claim a miner with unknown minerIndex (large dataset)", async function () {
+  it("Should claim a miner with unknown minerIndex (large dataset)", async function () {
     const { owner, asicHolder, pltc, asic, plsb } =
       await loadFixture(pltcFixture);
 
@@ -263,10 +266,10 @@ describe("PulseLitecoin", function () {
     .to.equal(initPlsbBalance + payoutFeeCalc.pSatoshisMine)
 
     expect(await pltc.balanceOf(asicHolder.address))
-    .to.equal(payoutFeeCalc.pSatoshisMine * ethers.parseUnits('1', 8))
+    .to.equal(payoutFeeCalc.pSatoshisMine * ethers.parseUnits('1', 3))
   });
 
-  it("Should try to claim a non-existent miner and fail", async function () {
+  it("Should try to claim a invalid minerId and fail", async function () {
     const { owner, asicHolder, pltc, asic, plsb } =
       await loadFixture(pltcFixture);
 
@@ -282,6 +285,22 @@ describe("PulseLitecoin", function () {
     await time.increase(30 * 86400)
 
     await expect(pltc.minerEnd(0, 0, miner[4]+1n, asicHolder.address)).to.be.revertedWithCustomError(
+      pltc, 'InvalidMinerId'
+    ).withArgs(miner[4]+1n)
+  });
+
+  it("Should try to claim without minerIndex with invalid minerId and fail", async function () {
+    const { owner, asicHolder, pltc, asic, plsb } =
+      await loadFixture(pltcFixture);
+
+    await time.increase(8 * 86400)
+
+    let minerStart = await pltc.minerStart(1e12)
+    let miner = await pltc.minerList(asicHolder.address, 0);
+
+    await time.increase(30 * 86400)
+
+    await expect(pltc.minerEnd(-1, 0, miner[4]+1n, asicHolder.address)).to.be.revertedWithCustomError(
       pltc, 'InvalidMinerId'
     ).withArgs(miner[4]+1n)
   });
