@@ -254,6 +254,10 @@ abstract contract PulseBitcoinMineable {
     return foundMinerIndex;
   }
 
+  function minerCount(address minerAddress) external view returns (uint256) {
+    return minerList[minerAddress].length;
+  }
+
   function _miningDuration() internal pure returns (uint) {
     return 30;
   }
