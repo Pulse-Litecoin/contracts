@@ -78,7 +78,7 @@ describe("PulseLitecoin", function () {
 
     expect(await asic.balanceOf(asicHolder.address)).to.equal(initAsicBalance - asicToMine)
     expect(await pltc.balanceOf(asicHolder.address))
-    .to.equal(payoutFeeCalc.pSatoshisMine * ethers.parseUnits('1', 3))
+    .to.equal(payoutFeeCalc.pSatoshisMine * 4n)
 
     await time.increase(30 * 86400)
 
@@ -86,7 +86,7 @@ describe("PulseLitecoin", function () {
 
     expect(await asic.balanceOf(asicHolder.address)).to.equal(initAsicBalance - payoutFeeCalc.bitoshisBurn)
     expect(await pltc.balanceOf(asicHolder.address))
-    .to.equal(payoutFeeCalc.pSatoshisMine * ethers.parseUnits('1', 3))
+    .to.equal(payoutFeeCalc.pSatoshisMine * 4n)
   });
 
   it("Should mine PulseLitecoin with Asic & get PulseLitecoin after ending miner", async function () {
@@ -115,9 +115,47 @@ describe("PulseLitecoin", function () {
     .to.equal(initPlsbBalance + payoutFeeCalc.pSatoshisMine)
 
     expect(await pltc.balanceOf(asicHolder.address))
-    .to.equal(payoutFeeCalc.pSatoshisMine * ethers.parseUnits('1', 3))
+    .to.equal(payoutFeeCalc.pSatoshisMine * 4n)
   });
 
+  it("Should mine PulseLitecoin with Asic multiple times", async function () {
+    const { asicHolder, pltc, asic, plsb } =
+      await loadFixture(pltcFixture);
+
+    await time.increase(8 * 86400)
+
+    let initAsicBalance = await asic.balanceOf(asicHolder.address)
+    let initPlsbBalance = await plsb.balanceOf(asicHolder.address)
+    let initPltcBalance = await pltc.balanceOf(asicHolder.address)
+    let asicToMine = ethers.parseUnits('1', 12)
+
+    await pltc.minerStart(asicToMine)
+    await pltc.minerStart(asicToMine)
+    await pltc.minerStart(asicToMine)
+
+    let miner = await pltc.minerList(asicHolder.address, 0),
+        miner2 = await pltc.minerList(asicHolder.address, 1),
+        miner3 = await pltc.minerList(asicHolder.address, 2);
+
+    await time.increase(30 * 86400)
+
+    // The order is weird here cause of how the contract removes elements from 
+    // the minerList when miners end. In the interface, this isn't an issue, 
+    // since all miners are redrawn after a successfull txn
+    await pltc.minerEnd(0, 0, miner[4], asicHolder.address)
+    await pltc.minerEnd(0, 0, miner3[4], asicHolder.address)
+    await pltc.minerEnd(0, 0, miner2[4], asicHolder.address)
+
+    let payoutFeeCalc = await plsb.calcPayoutAndFee(asicToMine)
+
+    expect(await asic.balanceOf(asicHolder.address)).to.equal(initAsicBalance - payoutFeeCalc.bitoshisBurn * 3n)
+
+    expect(await plsb.balanceOf(asicHolder.address))
+    .to.equal(initPlsbBalance + payoutFeeCalc.pSatoshisMine * 3n)
+
+    expect(await pltc.balanceOf(asicHolder.address))
+    .to.equal((payoutFeeCalc.pSatoshisMine * 3n) * 4n)
+  });
 
   it("Should mine PulseLitecoin with Asic and end miner late", async function () {
     const { asicHolder, pltc, asic, plsb, signers } =
@@ -149,9 +187,9 @@ describe("PulseLitecoin", function () {
     .to.equal(initPlsbBalance)
 
     expect(await pltc.balanceOf(asicHolder.address))
-    .to.equal((payoutFeeCalc.pSatoshisMine / 2n) * ethers.parseUnits('1', 3))
+    .to.equal((payoutFeeCalc.pSatoshisMine / 2n) * 4n)
     expect(await pltc.balanceOf(signers[1].address))
-    .to.equal((payoutFeeCalc.pSatoshisMine / 2n) * ethers.parseUnits('1', 3))
+    .to.equal((payoutFeeCalc.pSatoshisMine / 2n) * 4n)
   });
 
   it("Should check the balance of PulseLitecoin after lots of mining", async function () {
@@ -198,7 +236,7 @@ describe("PulseLitecoin", function () {
     .to.equal(initPlsbBalance + payoutFeeCalc.pSatoshisMine)
 
     expect(await pltc.balanceOf(asicHolder.address))
-    .to.equal(payoutFeeCalc.pSatoshisMine * ethers.parseUnits('1', 3))
+    .to.equal(payoutFeeCalc.pSatoshisMine * 4n)
 
     expect(await asic.balanceOf(pltc.target)).to.equal(0)
     expect(await plsb.balanceOf(pltc.target)).to.equal(0)
@@ -230,7 +268,7 @@ describe("PulseLitecoin", function () {
     .to.equal(initPlsbBalance + payoutFeeCalc.pSatoshisMine)
 
     expect(await pltc.balanceOf(asicHolder.address))
-    .to.equal(payoutFeeCalc.pSatoshisMine * ethers.parseUnits('1', 3))
+    .to.equal(payoutFeeCalc.pSatoshisMine * 4n)
   });
 
   it("Should claim a miner with unknown minerIndex (large dataset)", async function () {
@@ -266,7 +304,27 @@ describe("PulseLitecoin", function () {
     .to.equal(initPlsbBalance + payoutFeeCalc.pSatoshisMine)
 
     expect(await pltc.balanceOf(asicHolder.address))
-    .to.equal(payoutFeeCalc.pSatoshisMine * ethers.parseUnits('1', 3))
+    .to.equal(payoutFeeCalc.pSatoshisMine * 4n)
+  });
+
+  it("Should try to claim a miner early and fail", async function () {
+    const { owner, asicHolder, pltc, asic, plsb } =
+      await loadFixture(pltcFixture);
+
+    await time.increase(8 * 86400)
+
+    let initAsicBalance = await asic.balanceOf(asicHolder.address)
+    let initPlsbBalance = await plsb.balanceOf(asicHolder.address)
+    let initPltcBalance = await pltc.balanceOf(asicHolder.address)
+
+    let minerStart = await pltc.minerStart(1e12)
+    let miner = await pltc.minerList(asicHolder.address, 0);
+
+    await time.increase(15 * 86400)
+
+    await expect(pltc.minerEnd(0, 0, miner[4], asicHolder.address)).to.be.revertedWithCustomError(
+      pltc, 'CannotEndMinerEarly'
+    ).withArgs(15, 30)
   });
 
   it("Should try to claim a invalid minerId and fail", async function () {

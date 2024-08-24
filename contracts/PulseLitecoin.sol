@@ -9,6 +9,7 @@ pragma solidity ^0.8.19;
 // |_|
 //
 // t.me/pulselitecoin
+// x.com/pulselitecoin
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
@@ -16,7 +17,7 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "./lib/PulseBitcoinMineable.sol";
 
 contract PulseLitecoin is ERC20, ReentrancyGuard, PulseBitcoinMineable {
-  uint private constant SCALE_FACTOR = 1e3;
+  uint private constant SCALE_FACTOR = 4;
   uint private constant MINING_ADVANCE_PERIOD = 7;
   uint public immutable START_DAY;
 
@@ -24,6 +25,10 @@ contract PulseLitecoin is ERC20, ReentrancyGuard, PulseBitcoinMineable {
 
   constructor() ERC20("PulseLitecoin", "pLTC") {
     START_DAY = _currentDay();
+  }
+
+  function decimals() public view virtual override returns (uint8) {
+    return 12;
   }
 
   // @dev Start your miner
@@ -54,7 +59,7 @@ contract PulseLitecoin is ERC20, ReentrancyGuard, PulseBitcoinMineable {
 
     // Any time after you end the miner, you can still mint pLTC.
     // If servedDays > _daysForPenalty(), The miner will lose all plsb and half asic as per the PulseBitcoin mining contract.
-    // Also, the miner loses half of the pLTC yield to the caller
+    // Added for pLTC, the miner loses half of the pLTC yield to the caller
     if (servedDays > _daysForPenalty()) {
 
       if(!preMiners[miner.minerId]) {

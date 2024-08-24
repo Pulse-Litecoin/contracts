@@ -128,7 +128,7 @@ abstract contract PulseBitcoinMineable {
     if(minerIndex < 0) {
 
       // Make sure the miner is old enough. 
-      // pBTC.minerEnd does this for us below.
+      // pBTC.minerEnd does this for us with it's minerEnd function.
       uint256 servedDays = _currentDay() - miner.day;
       if (servedDays < _miningDuration()) {
         revert CannotEndMinerEarly(servedDays, _miningDuration());
