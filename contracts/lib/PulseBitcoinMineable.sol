@@ -8,6 +8,8 @@ pragma solidity ^0.8.19;
 // | .__/|____/ |_| \____|_|  |_|_|_| |_|\___|\__,_|_.__/|_|\___|
 // |_|
 //
+// This contract allows any contract that inherits it to mine PulseBitcoin.
+// Supports recovering miners that are ended on the PulseBitcoin contract directly.
 
 abstract contract Asic {
   event Transfer(address indexed from, address indexed to, uint value);

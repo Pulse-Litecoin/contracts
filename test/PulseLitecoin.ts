@@ -142,6 +142,36 @@ describe("PulseLitecoin", function () {
     .to.equal(payoutFeeCalc.pSatoshisMine * 4n)
   });
 
+  it("Should mine PulseLitecoin with Asic & be late", async function () {
+    const { signers, asicHolder, pltc, asic, pbtc } =
+      await loadFixture(pltcFixture);
+
+    await time.increase(8 * 86400)
+
+    let initAsicBalance = await asic.balanceOf(asicHolder.address)
+    let initPlsbBalance = await pbtc.balanceOf(asicHolder.address)
+    let initPltcBalance = await pltc.balanceOf(asicHolder.address)
+    let asicToMine = ethers.parseUnits('1', 12)
+
+    let minerStart = await pltc.minerStart(asicToMine)
+    let miner = await pltc.minerList(asicHolder.address, 0);
+
+    await time.increase(61 * 86400)
+
+    await pltc.connect(signers[1]).minerEnd(0, 0, miner[4], asicHolder.address)
+
+    let payoutFeeCalc = await pbtc.calcPayoutAndFee(asicToMine)
+
+    expect(await asic.balanceOf(asicHolder.address))
+    .to.equal(initAsicBalance - payoutFeeCalc.bitoshisBurn - (payoutFeeCalc.bitoshisReturn / 2n))
+
+    expect(await pbtc.balanceOf(asicHolder.address))
+    .to.equal(initPlsbBalance)
+
+    expect(await pltc.balanceOf(asicHolder.address))
+    .to.equal((payoutFeeCalc.pSatoshisMine / 2n) * 4n)
+  });
+
   it("Should mine PulseLitecoin with Asic multiple times", async function () {
     const { asicHolder, pltc, asic, pbtc } =
       await loadFixture(pltcFixture);

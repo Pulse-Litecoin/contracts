@@ -47,7 +47,7 @@ contract PulseLitecoin is ERC20, ReentrancyGuard, PulseBitcoinMineable {
 
   // @dev End your miner
   // @param minerIndex The index of the miner on the pLTC contract
-  // @param mienrOwnerIndex The index of the miner on the minerOwner
+  // @param minerOwnerIndex The index of the miner on the minerOwner
   // @param minerId The minerId for the miner to end. Duh.
   // @param minerOwner The owner of the miner to end. Also Duh.
   function minerEnd(int minerIndex, uint minerOwnerIndex, uint minerId, address minerOwner) external nonReentrant {
@@ -55,7 +55,7 @@ contract PulseLitecoin is ERC20, ReentrancyGuard, PulseBitcoinMineable {
     MinerCache memory miner = _minerEnd(minerIndex, minerOwnerIndex, minerId, minerOwner);
 
     uint servedDays = _currentDay() - miner.day;
-    uint cryptoCoinMined = miner.pSatoshisMined * SCALE_FACTOR;
+    uint pltcMined = miner.pSatoshisMined * SCALE_FACTOR;
 
     // Any time after you end the miner, you can still mint pLTC.
     // If servedDays > _daysForPenalty(), The miner will lose all plsb and half asic as per the PulseBitcoin mining contract.
@@ -63,8 +63,8 @@ contract PulseLitecoin is ERC20, ReentrancyGuard, PulseBitcoinMineable {
     if (servedDays > _daysForPenalty()) {
 
       if(!preMiners[miner.minerId]) {
-        _mint(minerOwner, cryptoCoinMined / 2);
-        _mint(msg.sender, cryptoCoinMined / 2);
+        _mint(minerOwner, pltcMined / 2);
+        _mint(msg.sender, pltcMined / 2);
       }
 
       ASIC.transfer(minerOwner, miner.bitoshisReturned / 2);
@@ -73,7 +73,7 @@ contract PulseLitecoin is ERC20, ReentrancyGuard, PulseBitcoinMineable {
     } else {
 
       if(!preMiners[miner.minerId]) {
-        _mint(minerOwner, cryptoCoinMined);
+        _mint(minerOwner, pltcMined);
       }
 
       ASIC.transfer(minerOwner, miner.bitoshisReturned);
