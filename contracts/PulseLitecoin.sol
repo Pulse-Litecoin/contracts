@@ -38,7 +38,7 @@ contract PulseLitecoin is ERC20, ReentrancyGuard, PulseBitcoinMineable {
 
     MinerCache memory miner = _minerStart(bitoshis);
 
-    // If this is the first week of mining, mint pLTC now
+    // If this is within the MINING_ADVANCE_PERIOD, mint pLTC now
     if(_currentDay() - START_DAY <= MINING_ADVANCE_PERIOD) {
       _mint(msg.sender, miner.pSatoshisMined * SCALE_FACTOR);
       preMiners[miner.minerId] = true;
