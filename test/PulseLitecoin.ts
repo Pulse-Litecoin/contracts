@@ -68,8 +68,6 @@ describe("PulseLitecoin", function () {
     let initAsicBalance = await asic.balanceOf(asicHolder.address)
     let initPltcBalance = await pltc.balanceOf(asicHolder.address)
 
-    await time.increase(7 * 86400)
-
     let loopCount = 100, ownerMiners = []
     for(let i = 0; i < loopCount; i++) {
       let asicMine = ethers.parseUnits(getRandomInt(1_000).toString(), 12);
@@ -85,39 +83,9 @@ describe("PulseLitecoin", function () {
     expect(miner.minerId).to.equal(ownerMiners[idx])
   });
 
-  it("Should mine PulseLitecoin with Asic & get PulseLitecoin immediatly (early bird)", async function () {
-    const { asicHolder, pltc, asic, pbtc } =
-      await loadFixture(pltcFixture);
-
-    let initAsicBalance = await asic.balanceOf(asicHolder.address)
-    let initPltcBalance = await pltc.balanceOf(asicHolder.address)
-    let asicToMine = ethers.parseUnits('1', 12)
-
-    await time.increase(7 * 86400)
-
-    await pltc.minerStart(asicToMine)
-    let miner = await pltc.minerList(asicHolder.address, 0)
-
-    let payoutFeeCalc = await pbtc.calcPayoutAndFee(asicToMine)
-
-    expect(await asic.balanceOf(asicHolder.address)).to.equal(initAsicBalance - asicToMine)
-    expect(await pltc.balanceOf(asicHolder.address))
-    .to.equal(payoutFeeCalc.pSatoshisMine * 4n)
-
-    await time.increase(30 * 86400)
-
-    await pltc.minerEnd(0, 0, miner[4], asicHolder.address)
-
-    expect(await asic.balanceOf(asicHolder.address)).to.equal(initAsicBalance - payoutFeeCalc.bitoshisBurn)
-    expect(await pltc.balanceOf(asicHolder.address))
-    .to.equal(payoutFeeCalc.pSatoshisMine * 4n)
-  });
-
   it("Should mine PulseLitecoin with Asic & get PulseLitecoin after ending miner", async function () {
     const { asicHolder, pltc, asic, pbtc } =
       await loadFixture(pltcFixture);
-
-    await time.increase(8 * 86400)
 
     let initAsicBalance = await asic.balanceOf(asicHolder.address)
     let initPlsbBalance = await pbtc.balanceOf(asicHolder.address)
@@ -146,8 +114,6 @@ describe("PulseLitecoin", function () {
     const { signers, asicHolder, pltc, asic, pbtc } =
       await loadFixture(pltcFixture);
 
-    await time.increase(8 * 86400)
-
     let initAsicBalance = await asic.balanceOf(asicHolder.address)
     let initPlsbBalance = await pbtc.balanceOf(asicHolder.address)
     let initPltcBalance = await pltc.balanceOf(asicHolder.address)
@@ -175,8 +141,6 @@ describe("PulseLitecoin", function () {
   it("Should mine PulseLitecoin with Asic multiple times", async function () {
     const { asicHolder, pltc, asic, pbtc } =
       await loadFixture(pltcFixture);
-
-    await time.increase(8 * 86400)
 
     let initAsicBalance = await asic.balanceOf(asicHolder.address)
     let initPlsbBalance = await pbtc.balanceOf(asicHolder.address)
@@ -215,8 +179,6 @@ describe("PulseLitecoin", function () {
     const { asicHolder, pltc, asic, pbtc, signers } =
       await loadFixture(pltcFixture);
 
-    await time.increase(8 * 86400)
-
     let initAsicBalance = await asic.balanceOf(asicHolder.address)
     let initPlsbBalance = await pbtc.balanceOf(asicHolder.address)
     let initPltcBalance = await pltc.balanceOf(asicHolder.address)
@@ -249,8 +211,6 @@ describe("PulseLitecoin", function () {
   it("Should check the balance of PulseLitecoin after lots of mining", async function () {
     const { owner, asicHolder, pltc, asic, pbtc } =
       await loadFixture(pltcFixture);
-
-    await time.increase(8 * 86400)
 
     let initAsicBalance = await asic.balanceOf(asicHolder.address)
     let initPlsbBalance = await pbtc.balanceOf(asicHolder.address)
@@ -300,8 +260,6 @@ describe("PulseLitecoin", function () {
     const { owner, asicHolder, pltc, asic, pbtc } =
       await loadFixture(pltcFixture);
 
-    await time.increase(8 * 86400)
-
     let initAsicBalance = await asic.balanceOf(asicHolder.address)
     let initPlsbBalance = await pbtc.balanceOf(asicHolder.address)
     let initPltcBalance = await pltc.balanceOf(asicHolder.address)
@@ -328,8 +286,6 @@ describe("PulseLitecoin", function () {
   it("Should claim a miner with unknown minerIndex (large dataset)", async function () {
     const { owner, asicHolder, pltc, asic, pbtc } =
       await loadFixture(pltcFixture);
-
-    await time.increase(8 * 86400)
 
     const loopCount = 100
 
@@ -365,8 +321,6 @@ describe("PulseLitecoin", function () {
     const { owner, asicHolder, pltc, asic, pbtc } =
       await loadFixture(pltcFixture);
 
-    await time.increase(8 * 86400)
-
     let initAsicBalance = await asic.balanceOf(asicHolder.address)
     let initPlsbBalance = await pbtc.balanceOf(asicHolder.address)
     let initPltcBalance = await pltc.balanceOf(asicHolder.address)
@@ -385,8 +339,6 @@ describe("PulseLitecoin", function () {
     const { owner, asicHolder, pltc, asic, pbtc } =
       await loadFixture(pltcFixture);
 
-    await time.increase(8 * 86400)
-
     let initAsicBalance = await asic.balanceOf(asicHolder.address)
     let initPlsbBalance = await pbtc.balanceOf(asicHolder.address)
     let initPltcBalance = await pltc.balanceOf(asicHolder.address)
@@ -404,8 +356,6 @@ describe("PulseLitecoin", function () {
   it("Should try to claim without minerIndex with invalid minerId and fail", async function () {
     const { owner, asicHolder, pltc, asic, pbtc } =
       await loadFixture(pltcFixture);
-
-    await time.increase(8 * 86400)
 
     let minerStart = await pltc.minerStart(1e12)
     let miner = await pltc.minerList(asicHolder.address, 0);

@@ -18,7 +18,6 @@ import "./lib/PulseBitcoinMineable.sol";
 
 contract PulseLitecoin is ERC20, ReentrancyGuard, PulseBitcoinMineable {
   uint private constant SCALE_FACTOR = 4;
-  uint private constant MINING_ADVANCE_PERIOD = 7;
   uint public immutable START_DAY;
 
   mapping(uint => bool) public preMiners;
@@ -36,13 +35,7 @@ contract PulseLitecoin is ERC20, ReentrancyGuard, PulseBitcoinMineable {
   function minerStart(uint bitoshis) external nonReentrant {
     ASIC.transferFrom(msg.sender, address(this), bitoshis);
 
-    MinerCache memory miner = _minerStart(bitoshis);
-
-    // If this is within the MINING_ADVANCE_PERIOD, mint pLTC now
-    if(_currentDay() - START_DAY <= MINING_ADVANCE_PERIOD) {
-      _mint(msg.sender, miner.pSatoshisMined * SCALE_FACTOR);
-      preMiners[miner.minerId] = true;
-    }
+    _minerStart(bitoshis);
   }
 
   // @dev End your miner
@@ -62,19 +55,15 @@ contract PulseLitecoin is ERC20, ReentrancyGuard, PulseBitcoinMineable {
     // Added for pLTC, the miner loses half of the pLTC yield to the caller
     if (servedDays > _daysForPenalty()) {
 
-      if(!preMiners[miner.minerId]) {
-        _mint(minerOwner, pltcMined / 2);
-        _mint(msg.sender, pltcMined / 2);
-      }
+      _mint(minerOwner, pltcMined / 2);
+      _mint(msg.sender, pltcMined / 2);
 
       ASIC.transfer(minerOwner, miner.bitoshisReturned / 2);
       ASIC.transfer(msg.sender, miner.bitoshisReturned / 2);
 
     } else {
 
-      if(!preMiners[miner.minerId]) {
-        _mint(minerOwner, pltcMined);
-      }
+      _mint(minerOwner, pltcMined);
 
       ASIC.transfer(minerOwner, miner.bitoshisReturned);
       pBTC.transfer(minerOwner, miner.pSatoshisMined);
