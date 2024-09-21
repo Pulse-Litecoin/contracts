@@ -20,8 +20,6 @@ contract PulseLitecoin is ERC20, ReentrancyGuard, PulseBitcoinMineable {
   uint private constant SCALE_FACTOR = 4;
   uint public immutable START_DAY;
 
-  mapping(uint => bool) public preMiners;
-
   constructor() ERC20("PulseLitecoin", "pLTC") {
     START_DAY = _currentDay();
   }
