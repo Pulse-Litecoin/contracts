@@ -90,6 +90,17 @@ abstract contract PulseBitcoinMineable {
     ASIC.approve(address(pBTC), type(uint).max);
   }
 
+  // @remark -1 Is magic. It makes your function call less efficient!
+  //  This function finds the miner by looping through all the pLTC miners 
+  //  (which could be quite a large number!). It'll still fail. The idea here is to save gas. 
+  //  If you can call this function with the minerIndex of the pLTC contract, do that. 
+  //  Otherwise, pass -1 & it'll do it. It'll just cost more. 
+
+  // @dev Start the PLSB Miner.
+  //   We store this miner as {msg.sender -> MinerCache instance}
+  //   On the PLSB contract, our miners are stored as {pLTCContract -> MinerCache instance}
+  //   We're duping this as {msg.sender -> MinerCache instance} so we can look it up later.
+  //   See @remark -1 for details.
   function _minerStart(
     uint bitoshis
   ) internal returns (
@@ -105,6 +116,14 @@ abstract contract PulseBitcoinMineable {
 
   }
 
+  // @dev End the PLSB miner
+  // @param minerIndex The index of the pLTC contract miner's address on the PLSB contract
+  //  This would be the miner's specific index on pLTC address. If you DON'T KNOW, specify -1. See @remark on -1
+  // @param minerOwnerIndex The index of the miner's address using the pBTCMineable's address.
+  //  This is the miner's ACTUAL miner. Like "who's mining"? The index above is just for saving unnessecary gas. 
+  // @param minerId collected from the PLSB contract
+  // @param minerOwner The owner of the miner
+  // @return miner a instance of MinerCache
   function _minerEnd(
     int minerIndex,
     uint minerOwnerIndex,
@@ -121,12 +140,12 @@ abstract contract PulseBitcoinMineable {
       revert InvalidMinerId(minerId);
     }
 
-    // Try to find the miner index
+    // Try to find the miner index (This is what -1 triggers)
     if(minerIndex < 0) {
       minerIndex = _minerIndexSearch(miner);
     }
 
-    // The miner index still wasn't found. Must've been ended already
+    // The miner index still wasn't found. Must've been ended already?
     if(minerIndex < 0) {
 
       // Make sure the miner is old enough. 
@@ -233,8 +252,7 @@ abstract contract PulseBitcoinMineable {
     }
   }
 
-  // @dev Find the minerIndex of a miner. 
-  // This is heavy, only runs if we don't know the index
+  // @dev Find the minerIndex of a miner. Only accessible by passing -1 as the minerIndex.
   function _minerIndexSearch(
     MinerCache memory miner
   ) internal view returns (int) {
