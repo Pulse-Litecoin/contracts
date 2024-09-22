@@ -91,10 +91,11 @@ abstract contract PulseBitcoinMineable {
   }
 
   // @remark -1 Is magic. It makes your function call less efficient!
-  //  This function finds the miner by looping through all the pLTC miners 
-  //  (which could be quite a large number!). It'll still fail. The idea here is to save gas. 
-  //  If you can call this function with the minerIndex of the pLTC contract, do that. 
-  //  Otherwise, pass -1 & it'll do it. It'll just cost more. 
+  //  a minerIndex of -1 triggers the _minerEnd function to run _minerIndexSearch to find the minerIndex
+  //  (which could be quite a large number!). The idea here is to save gas. 
+  //  If you can call this function with the minerIndex, do that. 
+  //  Otherwise, pass -1 & it'll do it. Just cost more. 
+  //  Could potentially run into out of gas errors.
 
   // @dev Start the PLSB Miner.
   //   We store this miner as {msg.sender -> MinerCache instance}
