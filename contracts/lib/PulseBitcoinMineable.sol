@@ -92,7 +92,7 @@ abstract contract PulseBitcoinMineable {
 
   // @remark -1 Is magic. It makes your function call less efficient!
   //  a minerIndex of -1 triggers the _minerEnd function to run _minerIndexSearch to find the minerIndex
-  //  (which could be quite a large number!). The idea here is to save gas. 
+  //  (which could loop quite a lot!)
   //  If you can call this function with the minerIndex, do that. 
   //  Otherwise, pass -1 & it'll do it. Just cost more. 
   //  Could potentially run into out of gas errors.
