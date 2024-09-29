@@ -18,11 +18,8 @@ import "./lib/PulseBitcoinMineable.sol";
 
 contract PulseLitecoin is ERC20, ReentrancyGuard, PulseBitcoinMineable {
   uint private constant SCALE_FACTOR = 4;
-  uint public immutable START_DAY;
 
-  constructor() ERC20("PulseLitecoin", "pLTC") {
-    START_DAY = _currentDay();
-  }
+  constructor() ERC20("PulseLitecoin", "pLTC") {}
 
   function decimals() public view virtual override returns (uint8) {
     return 12;
