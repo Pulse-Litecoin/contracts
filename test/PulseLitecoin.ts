@@ -274,6 +274,9 @@ describe("PulseLitecoin", function () {
 
     let payoutFeeCalc = await pbtc.calcPayoutAndFee(1e12)
 
+    expect(await asic.balanceOf(pltc.target)).to.equal(0)
+    expect(await pbtc.balanceOf(pltc.target)).to.equal(0)
+
     expect(await asic.balanceOf(asicHolder.address)).to.equal(initAsicBalance - payoutFeeCalc.bitoshisBurn)
 
     expect(await pbtc.balanceOf(asicHolder.address))
