@@ -97,8 +97,8 @@ abstract contract PulseBitcoinMineable {
   //  Otherwise, pass -1 & it'll do it. Just cost more. 
   //  Could potentially run into out of gas errors.
 
-  // @dev Start the PLSB Miner.
-  //   We store this miner as {msg.sender -> MinerCache instance}
+  // @notice Start the PLSB Miner.
+  // @dev We store this miner as {msg.sender -> MinerCache instance}
   //   On the PLSB contract, our miners are stored as {pLTCContract -> MinerCache instance}
   //   We're duping this as {msg.sender -> MinerCache instance} so we can look it up later.
   //   See @remark -1 for details.
@@ -117,7 +117,7 @@ abstract contract PulseBitcoinMineable {
 
   }
 
-  // @dev End the PLSB miner
+  // @notice End the PLSB miner
   // @param minerIndex The index of the pLTC contract miner's address on the PLSB contract
   //  This would be the miner's specific index on pLTC address. If you DON'T KNOW, specify -1. See @remark on -1
   // @param minerOwnerIndex The index of the miner's address using the pBTCMineable's address.
@@ -253,7 +253,8 @@ abstract contract PulseBitcoinMineable {
     }
   }
 
-  // @dev Find the minerIndex of a miner. Only accessible by passing -1 as the minerIndex.
+  // @notice Find the minerIndex of a miner. 
+  // @dev Only accessible by passing -1 as the minerIndex.
   function _minerIndexSearch(
     MinerCache memory miner
   ) internal view returns (int) {

@@ -25,7 +25,7 @@ contract PulseLitecoin is ERC20, ReentrancyGuard, PulseBitcoinMineable {
     return 12;
   }
 
-  // @dev Start your miner
+  // @notice Start your miner
   // @param bitoshis The amount in ASIC to mine with
   function minerStart(uint bitoshis) external nonReentrant {
     ASIC.transferFrom(msg.sender, address(this), bitoshis);
@@ -33,7 +33,7 @@ contract PulseLitecoin is ERC20, ReentrancyGuard, PulseBitcoinMineable {
     _minerStart(bitoshis);
   }
 
-  // @dev End your miner
+  // @notice End your miner
   // @param minerIndex The index of the miner on the pLTC contract
   // @param minerOwnerIndex The index of the miner on the minerOwner
   // @param minerId The minerId for the miner to end. Duh.
