@@ -17,7 +17,7 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "./lib/PulseBitcoinMineable.sol";
 
 contract PulseLitecoin is ERC20, ReentrancyGuard, PulseBitcoinMineable {
-  uint private constant SCALE_FACTOR = 4;
+  uint256 private constant SCALE_FACTOR = 4;
 
   constructor() ERC20("PulseLitecoin", "pLTC") {}
 
@@ -27,7 +27,7 @@ contract PulseLitecoin is ERC20, ReentrancyGuard, PulseBitcoinMineable {
 
   // @notice Start your miner
   // @param bitoshis The amount in ASIC to mine with
-  function minerStart(uint bitoshis) external nonReentrant {
+  function minerStart(uint256 bitoshis) external nonReentrant {
     ASIC.transferFrom(msg.sender, address(this), bitoshis);
 
     _minerStart(bitoshis);
@@ -38,12 +38,12 @@ contract PulseLitecoin is ERC20, ReentrancyGuard, PulseBitcoinMineable {
   // @param minerOwnerIndex The index of the miner on the minerOwner
   // @param minerId The minerId for the miner to end. Duh.
   // @param minerOwner The owner of the miner to end. Also Duh.
-  function minerEnd(int minerIndex, uint minerOwnerIndex, uint minerId, address minerOwner) external nonReentrant {
+  function minerEnd(int256 minerIndex, uint256 minerOwnerIndex, uint256 minerId, address minerOwner) external nonReentrant {
 
     MinerCache memory miner = _minerEnd(minerIndex, minerOwnerIndex, minerId, minerOwner);
 
-    uint servedDays = _currentDay() - miner.day;
-    uint pltcMined = miner.pSatoshisMined * SCALE_FACTOR;
+    uint256 servedDays = _currentDay() - miner.day;
+    uint256 pltcMined = miner.pSatoshisMined * SCALE_FACTOR;
 
     // Any time after you end the miner, you can still mint pLTC.
     // If servedDays > _daysForPenalty(), The miner will lose all plsb and half asic as per the PulseBitcoin mining contract.

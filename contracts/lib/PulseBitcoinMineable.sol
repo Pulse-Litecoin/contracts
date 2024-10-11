@@ -12,22 +12,22 @@ pragma solidity ^0.8.19;
 // Supports recovering miners that are ended on the PulseBitcoin contract directly.
 
 abstract contract Asic {
-  event Transfer(address indexed from, address indexed to, uint value);
+  event Transfer(address indexed from, address indexed to, uint256 value);
 
-  function approve(address spender, uint amount) public virtual returns (bool);
-  function balanceOf(address account) public view virtual returns (uint);
-  function transfer(address to, uint amount) public virtual returns (bool);
-  function transferFrom(address sender, address recipient, uint amount) public virtual returns(bool);
+  function approve(address spender, uint256 amount) public virtual returns (bool);
+  function balanceOf(address account) public view virtual returns (uint256);
+  function transfer(address to, uint256 amount) public virtual returns (bool);
+  function transferFrom(address sender, address recipient, uint256 amount) public virtual returns(bool);
 }
 
 abstract contract PulseBitcoin {
-  uint public miningRate;
-  uint public miningFee;
-  uint public totalpSatoshisMined;
-  uint public previousHalvingThresold;
-  uint public currentHalvingThreshold;
-  uint public numOfHalvings;
-  uint public atmMultiplier;
+  uint256 public miningRate;
+  uint256 public miningFee;
+  uint256 public totalpSatoshisMined;
+  uint256 public previousHalvingThresold;
+  uint256 public currentHalvingThreshold;
+  uint256 public numOfHalvings;
+  uint256 public atmMultiplier;
 
   struct MinerStore {
     uint128 bitoshisMiner;
@@ -40,17 +40,17 @@ abstract contract PulseBitcoin {
 
   mapping(address => MinerStore[]) public minerList;
 
-  event Transfer(address indexed from, address indexed to, uint value);
+  event Transfer(address indexed from, address indexed to, uint256 value);
 
-  function minerCount(address minerAddress) public virtual view returns (uint);
-  function minerStart(uint bitoshisMiner) public virtual;
-  function minerEnd(uint minerIndex, uint minerId, address minerAddr) public virtual;
-  function currentDay() public virtual view returns (uint);
+  function minerCount(address minerAddress) public virtual view returns (uint256);
+  function minerStart(uint256 bitoshisMiner) public virtual;
+  function minerEnd(uint256 minerIndex, uint256 minerId, address minerAddr) public virtual;
+  function currentDay() public virtual view returns (uint256);
 
-  function approve(address spender, uint amount) public virtual returns (bool);
-  function balanceOf(address account) public view virtual returns (uint);
-  function transfer(address to, uint amount) public virtual returns (bool);
-  function transferFrom(address sender, address recipient, uint amount) public virtual returns(bool);
+  function approve(address spender, uint256 amount) public virtual returns (bool);
+  function balanceOf(address account) public view virtual returns (uint256);
+  function transfer(address to, uint256 amount) public virtual returns (bool);
+  function transferFrom(address sender, address recipient, uint256 amount) public virtual returns(bool);
 }
 
 abstract contract PulseBitcoinMineable {
@@ -67,19 +67,19 @@ abstract contract PulseBitcoinMineable {
   }
 
   struct MinerCache {
-    uint bitoshisMiner;
-    uint bitoshisReturned;
-    uint pSatoshisMined;
-    uint bitoshisBurned;
-    uint minerId;
-    uint day;
+    uint256 bitoshisMiner;
+    uint256 bitoshisReturned;
+    uint256 pSatoshisMined;
+    uint256 bitoshisBurned;
+    uint256 minerId;
+    uint256 day;
   }
 
   mapping(address => MinerStore[]) public minerList;
 
   error UnknownMiner(MinerStore[] minerList, MinerCache miner);
-  error InvalidMinerId(uint minerId);
-  error InvalidMinerIndex(uint minerIndex);
+  error InvalidMinerId(uint256 minerId);
+  error InvalidMinerIndex(uint256 minerIndex);
   error CannotEndMinerEarly(uint256 servedDays, uint256 requiredDays);
 
   constructor() {
@@ -87,7 +87,7 @@ abstract contract PulseBitcoinMineable {
     ASIC = Asic(address(0x347a96a5BD06D2E15199b032F46fB724d6c73047));
 
     // Approve the pBTC contract to spend our ASIC so this contract can mine.
-    ASIC.approve(address(pBTC), type(uint).max);
+    ASIC.approve(address(pBTC), type(uint256).max);
   }
 
   // @remark -1 Is magic. It makes your function call less efficient!
@@ -103,7 +103,7 @@ abstract contract PulseBitcoinMineable {
   //   We're duping this as {msg.sender -> MinerCache instance} so we can look it up later.
   //   See @remark -1 for details.
   function _minerStart(
-    uint bitoshis
+    uint256 bitoshis
   ) internal returns (
     MinerCache memory
   ) {
@@ -127,8 +127,8 @@ abstract contract PulseBitcoinMineable {
   // @return miner a instance of MinerCache
   function _minerEnd(
     int minerIndex,
-    uint minerOwnerIndex,
-    uint minerId,
+    uint256 minerOwnerIndex,
+    uint256 minerId,
     address minerOwner
   ) internal returns (
     MinerCache memory
@@ -159,7 +159,7 @@ abstract contract PulseBitcoinMineable {
     } else {
 
       // End the miner as per usual
-      pBTC.minerEnd(uint(minerIndex), minerId, address(this));
+      pBTC.minerEnd(uint256(minerIndex), minerId, address(this));
 
     }
 
@@ -169,7 +169,7 @@ abstract contract PulseBitcoinMineable {
 
   }
 
-  function _minerAt(uint index) internal view returns (MinerCache memory) {
+  function _minerAt(uint256 index) internal view returns (MinerCache memory) {
     (
       uint128 bitoshisMiner,
       uint128 bitoshisReturned,
@@ -190,7 +190,7 @@ abstract contract PulseBitcoinMineable {
   }
 
   function _minerLoad(
-    uint minerIndex,
+    uint256 minerIndex,
     address minerOwner
   ) internal view returns (
     MinerCache memory miner
@@ -225,12 +225,12 @@ abstract contract PulseBitcoinMineable {
     MinerStore[] storage minerListRef,
     MinerCache memory miner
   ) internal {
-    uint minerListLength = minerListRef.length;
+    uint256 minerListLength = minerListRef.length;
 
-    for(uint i=0; i < minerListLength;) {
+    for(uint256 i=0; i < minerListLength;) {
       if(minerListRef[i].minerId == miner.minerId) {
 
-        uint lastIndex = minerListLength - 1;
+        uint256 lastIndex = minerListLength - 1;
 
         if(i != lastIndex) {
           minerListRef[i] = minerListRef[lastIndex];
@@ -258,10 +258,10 @@ abstract contract PulseBitcoinMineable {
   function _minerIndexSearch(
     MinerCache memory miner
   ) internal view returns (int) {
-    uint minerListLength = pBTC.minerCount(address(this));
+    uint256 minerListLength = pBTC.minerCount(address(this));
     int foundMinerIndex = -1;
 
-    for(uint i=0; i < minerListLength;) {
+    for(uint256 i=0; i < minerListLength;) {
       if(_minerAt(i).minerId == miner.minerId) {
         foundMinerIndex = int(i);
 
@@ -280,23 +280,23 @@ abstract contract PulseBitcoinMineable {
     return minerList[minerAddress].length;
   }
 
-  function _miningDuration() internal pure returns (uint) {
+  function _miningDuration() internal pure returns (uint256) {
     return 30;
   }
 
-  function _withdrawGracePeriod() internal pure returns (uint) {
+  function _withdrawGracePeriod() internal pure returns (uint256) {
     return 30;
   }
 
-  function _daysForPenalty() internal pure returns (uint) {
+  function _daysForPenalty() internal pure returns (uint256) {
     return _miningDuration() + _withdrawGracePeriod();
   }
 
-  function _lastMinerIndex() internal view returns (uint) {
+  function _lastMinerIndex() internal view returns (uint256) {
     return pBTC.minerCount(address(this)) - 1;
   }
 
-  function _currentDay() internal view returns (uint) {
+  function _currentDay() internal view returns (uint256) {
     return pBTC.currentDay();
   }
 }
