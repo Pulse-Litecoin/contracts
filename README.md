@@ -1,4 +1,4 @@
-# pLTC Front-End
+# pLTC Contracts
 
-### It do what it do
-### Testnet contract: 0xbC8E1e883dcb074038fE446A665C41386Ea9C5AE
+### ETH Contract Address: 0xE8df8F6d75008414Ed4C21715F2d4DadBdB94E6e
+### PLS Contract Address: 0x68eA849F92998D54555B33F45825c42Ee56866Fb
